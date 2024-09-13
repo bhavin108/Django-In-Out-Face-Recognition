@@ -1,0 +1,151 @@
+{% load static %}
+{% load crispy_forms_tags %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+    <style>
+        body {
+            background: url('{% static "recognition/img/bg_image.png" %}') no-repeat center center fixed;
+            background-size: cover;
+        }
+        #video {
+            display: block;
+            margin-top: 20px;
+            border: 2px solid #fff;
+            border-radius: 10px;
+        }
+        .alert {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1050;
+            margin: 0;
+        }
+        #status-message {
+            color: #fff;
+            margin-top: 20px;
+        }
+        .container {
+            background: rgba(0,0,0,0.6);
+            padding: 1em;
+            color: #fff;
+            border-radius: 10px;
+            box-shadow: 2px 2px 15px 0px rgba(0, 3, 0, 0.7);
+            margin: auto;
+            max-width: 600px;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Alert for dataset creation -->
+<div class="alert alert-success alert-dismissible fade" id="success-alert" role="alert">
+    Images captured successfully!
+    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+    </button>
+</div>
+
+<div class="container">
+    <a href="{% url 'dashboard' %}"><h5 class="text-left">Back</h5></a>
+
+    <form method="POST" id="capture-form">
+        {% csrf_token %}
+        <fieldset class="form-group">
+            <legend class="border-bottom mb-4">Enter Username</legend>
+            {{ form | crispy }}
+        </fieldset>
+        <div class="form-group">
+            <button class="btn btn-outline-info" type="button" id="start-capture">Capture Images</button>
+        </div>
+        <div id="status-message"></div>
+    </form>
+    <video id="video" width="100%" height="auto" autoplay></video>
+    <canvas id="canvas" width="640" height="480" style="display: none;"></canvas>
+</div>
+
+<!-- Optional JavaScript -->
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7HUidX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+
+<script>
+    document.getElementById('start-capture').addEventListener('click', function() {
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const context = canvas.getContext('2d');
+        const statusMessage = document.getElementById('status-message');
+        const successAlert = document.getElementById('success-alert');
+        const form = document.getElementById('capture-form');
+
+        statusMessage.textContent = 'Capturing Images...';
+
+        // Access webcam
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(function(stream) {
+                video.srcObject = stream;
+                video.play();
+
+                // Set canvas size based on video resolution
+                video.addEventListener('loadedmetadata', function() {
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                });
+
+                let sampleNum = 0;
+                const maxSamples = 200;
+
+                function captureFrame() {
+                    if (sampleNum >= maxSamples) {
+                        video.srcObject.getTracks().forEach(track => track.stop());
+                        statusMessage.textContent = 'Images Captured Successfully';
+                        successAlert.classList.add('show');
+                        return;
+                    }
+
+                    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    const imageDataURL = canvas.toDataURL('image/jpeg');
+
+                    fetch('/create-dataset/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'X-CSRFToken': form.querySelector('[name="csrfmiddlewaretoken"]').value
+                        },
+                        body: `username=${encodeURIComponent(form.querySelector('[name="username"]').value)}&image=${encodeURIComponent(imageDataURL)}&sampleNum=${sampleNum}`
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            sampleNum++;
+                        } else {
+                            console.error('Error capturing image:', data.error);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error sending image data:', error);
+                    });
+
+                    setTimeout(captureFrame, 100); // Capture every 100 ms
+                }
+
+                captureFrame();
+            })
+            .catch(function(error) {
+                console.error('Error accessing webcam: ', error);
+                statusMessage.textContent = 'Error accessing webcam.';
+            });
+    });
+</script>
+
+</body>
+</html>

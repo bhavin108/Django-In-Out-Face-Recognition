@@ -1,0 +1,171 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance System</title>
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        .container {
+            margin-top: 50px;
+        }
+        .actions {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            margin-top: 30px;
+        }
+        .action-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+        .action-item button {
+            background-size: cover;
+            border: none;
+            width: 300px;
+            height: 300px;
+            cursor: pointer;
+            background-color: transparent;
+            background-position: center;
+            background-repeat: no-repeat;
+            transition: opacity 0.3s ease;
+        }
+        #check-in-btn {
+            background-image: url("{% static 'recognition/img/enter.png' %}");
+        }
+        #check-out-btn {
+            background-image: url("{% static 'recognition/img/exit.png' %}");
+        }
+        .action-item button:hover {
+            opacity: 0.8;
+        }
+        .action-item .btn-text {
+            color: black;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        #video-stream {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+        }
+        #camera-feed {
+            max-width: 100%;
+            border: 2px solid #000;
+        }
+        .login-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            margin-left: 20px; /* Adjust if needed to fit layout */
+        }
+        .login-item img {
+            width: 300px;
+            height: 300px;
+            cursor: pointer;
+        }
+        .login-item .btn-text {
+            color: black;
+            font-size: 18px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav>
+            <ul>
+                {% if user.is_authenticated %}
+                    <li><a href="{% url 'logout' %}">Logout</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <h1>Welcome to Yamuna Jewellers Attendance System</h1>
+        
+        {% if messages %}
+            <div>
+                {% for message in messages %}
+                    <p class="{{ message.tags }}">{{ message }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <div class="actions">
+            <div class="action-item">
+                <button id="check-in-btn" onclick="startAttendance('{% url 'mark_your_attendance' %}', '{% url 'attendance_in_redirect' %}')"></button>
+                <div class="btn-text">Check In</div>
+            </div>
+            <div class="action-item">
+                <button id="check-out-btn" onclick="startAttendance('{% url 'mark_your_attendance_out' %}', '{% url 'attendance_out_redirect' %}')"></button>
+                <div class="btn-text">Check Out</div>
+            </div>
+            <div class="login-item">
+                <a href="{% url 'login' %}">
+                    <img src="{% static 'recognition/img/login.png' %}" class="img-responsive" />
+                </a>
+                <div class="btn-text">Login</div>
+            </div>
+        </div>
+
+        <div id="video-stream">
+            <h2>Marking Attendance...</h2>
+            <video id="camera-feed" autoplay></video>
+        </div>
+    </main>
+
+    <script type="text/javascript">
+        function startAttendance(url, redirectUrl) {
+            // Show the video stream
+            document.getElementById('video-stream').style.display = 'block';
+
+            // Access the camera and stream video
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then(stream => {
+                    const video = document.getElementById('camera-feed');
+                    video.srcObject = stream;
+
+                    // Capture a frame from the video stream and send it to the server
+                    setTimeout(() => {
+                        const canvas = document.createElement('canvas');
+                        canvas.width = video.videoWidth;
+                        canvas.height = video.videoHeight;
+                        const context = canvas.getContext('2d');
+                        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                        const frameData = canvas.toDataURL('image/jpeg').split(',')[1]; // Get base64 encoded image data
+
+                        // Send the frame data to the server
+                        $.ajax({
+                            type: 'POST',
+                            url: url,
+                            data: {
+                                frame: frameData,
+                                csrfmiddlewaretoken: '{{ csrf_token }}'
+                            },
+                            success: function(response) {
+                                if (response.status === 'success') {
+                                    window.location.href = redirectUrl;
+                                } else {
+                                    alert('Error: ' + response.message);
+                                }
+                            }
+                        });
+                    }, 3000); // Capture after 3 seconds
+                })
+                .catch(error => {
+                    console.error('Error accessing camera:', error);
+                    alert('Unable to access camera.');
+                });
+        }
+    </script>
+</body>
+</html>
