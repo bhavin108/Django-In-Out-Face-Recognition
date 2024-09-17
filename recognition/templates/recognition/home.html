@@ -22,12 +22,12 @@
         }
         .actions {
             display: flex;
-            flex-direction: column; /* Keep the buttons in a vertical layout */
+            flex-direction: row; /* Keep the buttons in a vertical layout */
             justify-content: flex-start;
             align-items: flex-start; /* Align items to the left */
             gap: 20px; /* Adjust gap between items */
             margin-top: 20px;
-            margin-left: 70px; /* Adjust left margin to match the header */
+            margin-left: 20px; /* Adjust left margin to match the header */
         }
         .action-item, .login-item {
             display: flex;
@@ -38,8 +38,8 @@
         .action-item button, .login-item img {
             background-size: cover;
             border: none;
-            width: 75px;
-            height: 75px;
+            width: 65px;
+            height: 65px;
             cursor: pointer;
             background-color: transparent;
             background-position: center;
@@ -69,7 +69,9 @@
         }
         #camera-feed {
             max-width: 100%;
-            border: 2px solid #000;
+            height: auto;
+            border: 2px solid #000; 
+            border-radius: 10px;
         }
         .message {
             color: red;
@@ -176,7 +178,7 @@
                                     // Redirect to the specified URL after success
                                     setTimeout(() => {
                                         window.location.href = redirectUrl;
-                                    }, 2000); // Adjust time as needed
+                                    }, 4000); // Adjust time as needed
                                 } else {
                                     // Display error message if any
                                     $('#error-message').text(response.message).show();
@@ -186,7 +188,7 @@
                                 $('#error-message').text('An error occurred. Please try again.').show();
                             }
                         });
-                    }, 1000); // Adjust time as needed
+                    }, 4000); // Adjust time as needed
                 })
                 .catch(error => {
                     $('#error-message').text('Could not access camera.').show();

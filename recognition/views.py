@@ -116,7 +116,7 @@ def add_photos(request):
     return render(request, 'recognition/add_photos.html', {'form': form})
 
 
-def predict(face_aligned,svc,threshold=0.9):
+def predict(face_aligned,svc,threshold=0.8):
 	face_encodings=np.zeros((1,128))
 	try:
 		x_face_locations=face_recognition.face_locations(face_aligned)
@@ -570,6 +570,7 @@ def mark_your_attendance(request):
 
         unknown_detected = True
         highest_prob = 0
+        recognized_person_name = None
 
         for face in faces:
             # Use dlib.rectangle attributes directly
@@ -579,6 +580,7 @@ def mark_your_attendance(request):
 
             if pred != [-1]:
                 person_name = encoder.inverse_transform(np.ravel([pred]))[0]
+                recognized_person_name = person_name
                 unknown_detected = False
                 if count[person_name] == 0:
                     start[person_name] = time.time()
@@ -606,6 +608,8 @@ def mark_your_attendance(request):
 
         # Update attendance in the database
         update_attendance_in_db_in(present)
+        if recognized_person_name:
+            request.session['recognized_person_name'] = recognized_person_name
         return JsonResponse({"status": "success", "probability": highest_prob * 100})
 
     return JsonResponse({"status": "error", "message": "Invalid request."})
@@ -644,6 +648,7 @@ def mark_your_attendance_out(request):
 
         unknown_detected = True
         highest_prob = 0
+        recognized_person_name = None
 
         for face in faces:
             # Use dlib.rectangle attributes directly
@@ -653,6 +658,7 @@ def mark_your_attendance_out(request):
 
             if pred != [-1]:
                 person_name = encoder.inverse_transform(np.ravel([pred]))[0]
+                recognized_person_name = person_name
                 unknown_detected = False
                 if count[person_name] == 0:
                     start[person_name] = time.time()
@@ -680,6 +686,8 @@ def mark_your_attendance_out(request):
 
         # Update attendance in the database
         update_attendance_in_db_out(present)
+        if recognized_person_name:
+            request.session['recognized_person_name'] = recognized_person_name
         return JsonResponse({"status": "success", "probability": highest_prob * 100})
 
     return JsonResponse({"status": "error", "message": "Invalid request."})
@@ -690,13 +698,13 @@ def home(request):
 
 # Views to handle redirects after attendance is marked
 def attendance_in_redirect(request):
-    messages.success(request, 'Attendance marked successfully for check-in.')
+    recognized_person_name = request.session.get('recognized_person_name', request.user.username)
+    messages.success(request, f"User: {recognized_person_name}  Checked-IN successfully. ")
     return HttpResponseRedirect(reverse('home'))
 
-
-
 def attendance_out_redirect(request):
-    messages.success(request, 'Attendance marked successfully for check-out.')
+    recognized_person_name = request.session.get('recognized_person_name', request.user.username)
+    messages.success(request, f"User: {recognized_person_name}  Checked-OUT successfully.")
     return HttpResponseRedirect(reverse('home'))
 
 @login_required
