@@ -1,5 +1,5 @@
 from django.shortcuts import render,redirect
-from .forms import usernameForm,DateForm,UsernameAndDateForm, DateForm_2
+from .forms import usernameForm,DateForm,UsernameAndDateForm, DateForm_2,UserSelectionForm
 from django.contrib import messages
 from django.contrib.auth.models import User
 import cv2
@@ -95,16 +95,18 @@ def process_images(request):
         return JsonResponse({'status': 'success'})
     return JsonResponse({'status': 'error'})
 
-
 @login_required
 def add_photos(request):
+    # Only allow 'admin' to access this view
     if request.user.username != 'admin':
         return redirect('not-authorised')
 
     if request.method == 'POST':
-        form = usernameForm(request.POST)
+        form = UserSelectionForm(request.POST)  # Use the updated form
         if form.is_valid():
-            username = form.cleaned_data['username']
+            username = form.cleaned_data['username'].username  # Get the selected username
+
+            # Assuming you have a function `username_present` to check if the username exists
             if username_present(username):
                 messages.success(request, 'Dataset creation started. Please wait until the process completes.')
                 return render(request, 'recognition/add_photos.html', {'form': form, 'username': username})
@@ -112,7 +114,8 @@ def add_photos(request):
                 messages.warning(request, 'No such username found. Please register employee first.')
                 return redirect('dashboard')
     else:
-        form = usernameForm()
+        form = UserSelectionForm()  # Use the form with dropdown for usernames
+
     return render(request, 'recognition/add_photos.html', {'form': form})
 
 
