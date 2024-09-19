@@ -1,5 +1,5 @@
 from django.shortcuts import render,redirect
-from .forms import usernameForm,DateForm,UsernameAndDateForm, DateForm_2
+from .forms import usernameForm,DateForm,UsernameAndDateForm, DateForm_2,UserSelectionForm
 from django.contrib import messages
 from django.contrib.auth.models import User
 import cv2
@@ -95,16 +95,18 @@ def process_images(request):
         return JsonResponse({'status': 'success'})
     return JsonResponse({'status': 'error'})
 
-
 @login_required
 def add_photos(request):
+    # Only allow 'admin' to access this view
     if request.user.username != 'admin':
         return redirect('not-authorised')
 
     if request.method == 'POST':
-        form = usernameForm(request.POST)
+        form = UserSelectionForm(request.POST)  # Use the updated form
         if form.is_valid():
-            username = form.cleaned_data['username']
+            username = form.cleaned_data['username'].username  # Get the selected username
+
+            # Assuming you have a function `username_present` to check if the username exists
             if username_present(username):
                 messages.success(request, 'Dataset creation started. Please wait until the process completes.')
                 return render(request, 'recognition/add_photos.html', {'form': form, 'username': username})
@@ -112,11 +114,12 @@ def add_photos(request):
                 messages.warning(request, 'No such username found. Please register employee first.')
                 return redirect('dashboard')
     else:
-        form = usernameForm()
+        form = UserSelectionForm()  # Use the form with dropdown for usernames
+
     return render(request, 'recognition/add_photos.html', {'form': form})
 
 
-def predict(face_aligned,svc,threshold=0.9):
+def predict(face_aligned,svc,threshold=0.8):
 	face_encodings=np.zeros((1,128))
 	try:
 		x_face_locations=face_recognition.face_locations(face_aligned)
@@ -570,6 +573,7 @@ def mark_your_attendance(request):
 
         unknown_detected = True
         highest_prob = 0
+        recognized_person_name = None
 
         for face in faces:
             # Use dlib.rectangle attributes directly
@@ -579,6 +583,7 @@ def mark_your_attendance(request):
 
             if pred != [-1]:
                 person_name = encoder.inverse_transform(np.ravel([pred]))[0]
+                recognized_person_name = person_name
                 unknown_detected = False
                 if count[person_name] == 0:
                     start[person_name] = time.time()
@@ -606,6 +611,8 @@ def mark_your_attendance(request):
 
         # Update attendance in the database
         update_attendance_in_db_in(present)
+        if recognized_person_name:
+            request.session['recognized_person_name'] = recognized_person_name
         return JsonResponse({"status": "success", "probability": highest_prob * 100})
 
     return JsonResponse({"status": "error", "message": "Invalid request."})
@@ -644,6 +651,7 @@ def mark_your_attendance_out(request):
 
         unknown_detected = True
         highest_prob = 0
+        recognized_person_name = None
 
         for face in faces:
             # Use dlib.rectangle attributes directly
@@ -653,6 +661,7 @@ def mark_your_attendance_out(request):
 
             if pred != [-1]:
                 person_name = encoder.inverse_transform(np.ravel([pred]))[0]
+                recognized_person_name = person_name
                 unknown_detected = False
                 if count[person_name] == 0:
                     start[person_name] = time.time()
@@ -680,6 +689,8 @@ def mark_your_attendance_out(request):
 
         # Update attendance in the database
         update_attendance_in_db_out(present)
+        if recognized_person_name:
+            request.session['recognized_person_name'] = recognized_person_name
         return JsonResponse({"status": "success", "probability": highest_prob * 100})
 
     return JsonResponse({"status": "error", "message": "Invalid request."})
@@ -690,13 +701,13 @@ def home(request):
 
 # Views to handle redirects after attendance is marked
 def attendance_in_redirect(request):
-    messages.success(request, 'Attendance marked successfully for check-in.')
+    recognized_person_name = request.session.get('recognized_person_name', request.user.username)
+    messages.success(request, f"User: {recognized_person_name}  Checked-IN successfully. ")
     return HttpResponseRedirect(reverse('home'))
 
-
-
 def attendance_out_redirect(request):
-    messages.success(request, 'Attendance marked successfully for check-out.')
+    recognized_person_name = request.session.get('recognized_person_name', request.user.username)
+    messages.success(request, f"User: {recognized_person_name}  Checked-OUT successfully.")
     return HttpResponseRedirect(reverse('home'))
 
 @login_required

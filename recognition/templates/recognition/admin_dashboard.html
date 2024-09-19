@@ -47,6 +47,15 @@
             border-radius: 10px;
             box-shadow: 2px 2px 15px 0px rgba(0, 3, 0, 0.7);
         }
+
+        #processingMessage {
+            display: none;
+            text-align: center;
+            margin-top: 1em;
+            margin-left: 2em;
+            font-size: 1.2em;
+            color: #21cac5;
+        }
     </style>
 </head>
 <body>
@@ -70,7 +79,7 @@
                 <h4 class="icon-name">Add Photos</h4>
             </div>
             <div class="col-md-6 icon-container">
-                <a href="{% url 'train' %}" id="train"><img src="{% static 'recognition/img/train.jpeg' %}" class="img-responsive" /></a>
+                <a href="{% url 'train' %}" id="trainButton" onclick="showProcessingMessage()"><img src="{% static 'recognition/img/train.jpeg' %}" class="img-responsive" /></a>
                 <h4 class="icon-name">Train</h4>
             </div>
             <div class="col-md-6 icon-container">
@@ -78,6 +87,9 @@
                 <h4 class="icon-name">View Attendance Reports</h4>
             </div>
         </div>
+
+        <!-- Processing message -->
+        <div id="processingMessage">Processing...</div>
 
         {% if messages %}
             <div class="row">
@@ -94,5 +106,12 @@
     <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" crossorigin="anonymous"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" crossorigin="anonymous"></script>
+
+    <!-- JavaScript to show Processing message -->
+    <script>
+        function showProcessingMessage() {
+            document.getElementById('processingMessage').style.display = 'block';
+        }
+    </script>
 </body>
 </html>
