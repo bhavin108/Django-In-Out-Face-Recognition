@@ -39,10 +39,68 @@ import base64
 from django.http import JsonResponse, StreamingHttpResponse, HttpResponseRedirect
 from django.urls import reverse
 import logging
-
+import requests
 
 mpl.use('Agg')
+@login_required
+def list_employees(request):
+    url = 'https://daily-inout.in/api/list-employee'
+    token = '5d5db2ae77981234567891af538baa9045a84c0e889f672baf83ff24'
+    headers = {
+        'Authorization': f'{token}',
+        'Content-Type': 'application/json'
+    }
 
+    try:
+        response = requests.get(url, headers=headers)
+
+        if response.status_code == 200:
+            data = response.json().get('data', [])
+            return render(request, 'recognition/list_employees.html', {'employees': data})  # Render HTML page
+        else:
+            return JsonResponse({'error': response.text}, status=response.status_code)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+    
+
+# views.py
+def save_employee_and_update_auth_users(request):
+    url = 'https://daily-inout.in/api/list-employee'
+    headers = {
+        'Authorization': '5d5db2ae77981234567891af538baa9045a84c0e889f672baf83ff24',
+        'Content-Type': 'application/json',
+    }
+
+    # Fetch data from the API
+    response = requests.get(url, headers=headers)
+
+    if response.status_code == 200:
+        data = response.json().get('data', [])
+        
+        default_password = 'user@1234'
+
+        # Loop through each employee and create/update the corresponding user in auth_user
+        for emp in data:
+            username = emp['userName']  # Use userName as the username
+            email = f"{username}@example.com"  # Generate a dummy email
+
+            # Create or update the user in the User model (auth_user)
+            user, created = User.objects.update_or_create(
+                username=username,
+                defaults={
+                    'first_name': emp['name'].split()[0],  # Set first name
+                    'last_name': ' '.join(emp['name'].split()[1:]),  # Set last name
+                    'email': email,
+                }
+            )
+            
+            # Set the password and save the user
+            user.set_password(default_password)
+            user.save()
+
+        return JsonResponse({'status': 'success', 'message': 'Users saved and updated successfully!'})
+    else:
+        return JsonResponse({'status': 'error', 'message': 'Failed to fetch employee data from API.'})
 
 #utility functions:
 def username_present(username):
@@ -119,7 +177,7 @@ def add_photos(request):
     return render(request, 'recognition/add_photos.html', {'form': form})
 
 
-def predict(face_aligned,svc,threshold=0.8):
+def predict(face_aligned,svc,threshold=0.75):
 	face_encodings=np.zeros((1,128))
 	try:
 		x_face_locations=face_recognition.face_locations(face_aligned)
@@ -167,17 +225,17 @@ def update_attendance_in_db_in(present):
 
 		if qs is None:
 			if present[person]==True:
-						a=Present(user=user,date=today,present=True)
+						a=Present(user=user,username=person, date=today,present=True)
 						a.save()
 			else:
-				a=Present(user=user,date=today,present=False)
+				a=Present(user=user,username=person,date=today,present=False)
 				a.save()
 		else:
 			if present[person]==True:
 				qs.present=True
 				qs.save(update_fields=['present'])
 		if present[person]==True:
-			a=Time(user=user,date=today,time=time, out=False)
+			a=Time(user=user,username=person,date=today,time=time, out=False)
 			a.save()
 
 
@@ -188,7 +246,7 @@ def update_attendance_in_db_out(present):
 	for person in present:
 		user=User.objects.get(username=person)
 		if present[person]==True:
-			a=Time(user=user,date=today,time=time, out=True)
+			a=Time(user=user,username=person,date=today,time=time, out=True)
 			a.save()
 
 
@@ -580,7 +638,6 @@ def mark_your_attendance(request):
             x, y, w, h = face.left(), face.top(), face.right(), face.bottom()
             face_aligned = fa.align(frame, gray_frame, face)
             (pred, prob) = predict(face_aligned, svc)
-
             if pred != [-1]:
                 person_name = encoder.inverse_transform(np.ravel([pred]))[0]
                 recognized_person_name = person_name
@@ -835,7 +892,6 @@ def view_attendance_employee(request):
 		if form.is_valid():
 			username=form.cleaned_data.get('username')
 			if username_present(username):
-
 				u=User.objects.get(username=username)
 
 				time_qs=Time.objects.filter(user=u)
@@ -847,8 +903,6 @@ def view_attendance_employee(request):
 					messages.warning(request, f'Invalid date selection.')
 					return redirect('view-attendance-employee')
 				else:
-
-
 					time_qs=time_qs.filter(date__gte=date_from).filter(date__lte=date_to).order_by('-date')
 					present_qs=present_qs.filter(date__gte=date_from).filter(date__lte=date_to).order_by('-date')
 

@@ -37,14 +37,40 @@
 
     <form method="POST" id="capture-form">
         {% csrf_token %}
-        <fieldset class="form-group">
-            <legend class="border-bottom mb-4">Select Username</legend>
-            {{ form.username | as_crispy_field }}  <!-- Dropdown for selecting username -->
-        </fieldset>
-        <div class="form-group">
-            <button class="btn btn-outline-info" type="button" id="start-capture">Capture Images</button>
-        </div>
-        <div id="status-message"></div>
+        <form method="POST" id="capture-form">
+            {% csrf_token %}
+            <fieldset class="form-group">
+                <legend class="border-bottom mb-4">Add Photos</legend>
+                <select name="username" class="form-control" id="username-select">
+                    <option value="" disabled selected>Select User</option>
+                    {% for user in form.username.field.choices %}
+                        {% if user.0 %}  <!-- Exclude the empty choice -->
+                            <option value="{{ user.0 }}">{{ user.1 }}</option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+            </fieldset>
+            
+            <div class="form-group">
+                <button class="btn btn-outline-success" type="button" id="save-employee">Refresh</button>
+                <button class="btn btn-outline-info" type="button" id="start-capture" disabled>Capture Images</button>
+            </div>
+        </form>
+        
+        <script>
+            const usernameSelect = document.getElementById('username-select');
+            const captureButton = document.getElementById('start-capture');
+        
+            usernameSelect.addEventListener('change', function() {
+                if (usernameSelect.value) {
+                    captureButton.disabled = false; // Enable the button if a user is selected
+                } else {
+                    captureButton.disabled = true; // Disable the button if no user is selected
+                }
+            });
+        </script>
+        
+        <div id="status-message"></div> <!-- To display status messages -->
     </form>
     <video id="video" width="100%" height="auto" autoplay></video>
     <canvas id="canvas" width="640" height="480" style="display: none;"></canvas>
@@ -63,14 +89,12 @@
         const statusMessage = document.getElementById('status-message');
         const form = document.getElementById('capture-form');
         
-        // Get the selected username from the dropdown
         const usernameSelect = form.querySelector('select[name="username"]');
         const selectedOption = usernameSelect.options[usernameSelect.selectedIndex];
-        const username = selectedOption.textContent.trim();  // Get the displayed username (not the ID)
+        const username = selectedOption.textContent.trim();
 
         statusMessage.textContent = 'Capturing Images...';
 
-        // Access webcam, with adjusted constraints for mobile devices
         const constraints = {
             video: {
                 width: { ideal: 640 },
@@ -84,7 +108,6 @@
                 video.srcObject = stream;
                 video.play();
 
-                // Set canvas size based on video resolution
                 video.addEventListener('loadedmetadata', function() {
                     canvas.width = video.videoWidth;
                     canvas.height = video.videoHeight;
@@ -92,19 +115,25 @@
 
                 let sampleNum = 0;
                 const maxSamples = 200;
-                const captureInterval = 300; // 300ms between captures to help performance on mobile
+                const captureInterval = 300;
 
                 function captureFrame() {
                     if (sampleNum >= maxSamples) {
+                        // Stop the video stream
                         video.srcObject.getTracks().forEach(track => track.stop());
-                        statusMessage.textContent = 'Images Captured Successfully';
+                
+                        // Check if all images have been processed before showing the success message
+                        Promise.all(uploadPromises).then(() => {
+                            statusMessage.textContent = 'Images Captured Successfully';
+                        });
+                
                         return;
                     }
-
+                
                     context.drawImage(video, 0, 0, canvas.width, canvas.height);
                     const imageDataURL = canvas.toDataURL('image/jpeg');
-
-                    fetch('/create-dataset/', {
+                
+                    const uploadPromise = fetch('/create-dataset/', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/x-www-form-urlencoded',
@@ -123,16 +152,47 @@
                     .catch(error => {
                         console.error('Error sending image data:', error);
                     });
-
-                    setTimeout(captureFrame, captureInterval); // Capture every 300 ms
+                
+                    // Push the current upload promise to the array
+                    uploadPromises.push(uploadPromise);
+                
+                    setTimeout(captureFrame, captureInterval);
                 }
-
+                
+                // Initialize the array to hold upload promises
+                let uploadPromises = [];
+                
                 captureFrame();
             })
             .catch(function(error) {
                 console.error('Error accessing webcam: ', error);
                 statusMessage.textContent = 'Error accessing webcam.';
             });
+    });
+
+    // AJAX call for saving employees
+    document.getElementById('save-employee').addEventListener('click', function() {
+        const statusMessage = document.getElementById('status-message');
+        statusMessage.textContent = 'Updating employees list...';
+
+        fetch('/save-employees/', {
+            method: 'GET',
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                statusMessage.textContent = data.message;  // Show success message
+            // Automatically refresh the page after 2 seconds
+            setTimeout(function() {
+                location.reload();
+            }, 2000);            
+            } else {
+                statusMessage.textContent = 'Error: ' + data.message;  // Show error message
+            }
+        })
+        .catch(error => {
+            statusMessage.textContent = 'An error occurred: ' + error.message;
+        });
     });
 </script>
 

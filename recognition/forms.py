@@ -11,7 +11,7 @@ class usernameForm(forms.Form):
 class UserSelectionForm(forms.Form):
     # Dropdown for selecting users
     username = forms.ModelChoiceField(
-        queryset=User.objects.all(),  # Fetch all registered users
+        queryset=User.objects.filter(is_superuser=False).exclude(username='admin'),  # Fetch all registered users
         widget=forms.Select,  # Render as a dropdown
         empty_label="Select User"  # Placeholder text for the dropdown
     )
@@ -20,9 +20,14 @@ class DateForm(forms.Form):
 
 
 class UsernameAndDateForm(forms.Form):
-	username=forms.CharField(max_length=30)
-	date_from=forms.DateField(widget = forms.SelectDateWidget(empty_label=("Choose Year", "Choose Month", "Choose Day")),initial=date.today().replace(day=1))
-	date_to=forms.DateField(widget = forms.SelectDateWidget(empty_label=("Choose Year", "Choose Month", "Choose Day")),initial=date.today)
+    #Dropdown for selecting users
+    username = forms.ModelChoiceField(
+        queryset=User.objects.filter(is_superuser=False).exclude(username='admin'),  # Fetch all registered users
+        widget=forms.Select,  # Render as a dropdown
+        empty_label="Select User"  # Placeholder text for the dropdown
+    )
+    date_from=forms.DateField(widget = forms.SelectDateWidget(empty_label=("Choose Year", "Choose Month", "Choose Day")),initial=date.today().replace(day=1))
+    date_to=forms.DateField(widget = forms.SelectDateWidget(empty_label=("Choose Year", "Choose Month", "Choose Day")),initial=date.today)
 
 
 class DateForm_2(forms.Form):
