@@ -102,6 +102,30 @@ def save_employee_and_update_auth_users(request):
     else:
         return JsonResponse({'status': 'error', 'message': 'Failed to fetch employee data from API.'})
 
+def send_post_request_to_api(username,time, out):
+    # URL for IN or OUT entry based on the `out` flag
+    token = '5d5db2ae77981234567891af538baa9045a84c0e889f672baf83ff24'
+    headers = {
+        'Authorization': f'{token}',
+    
+    }
+    if out:
+        url = 'https://daily-inout.in/api/add-OutEntry'
+    else:
+        url = 'https://daily-inout.in/api/add-InEntry'
+    
+    payload = {
+        "user": username,
+        "time": time.strftime('%Y-%m-%d %H:%M:%S')
+    }
+    response = requests.post(url, data=payload, headers=headers)
+    if response.status_code == 200:
+        print(f"Successfully sent {'OUT' if out else 'IN'} attendance data for {username}.")
+    else:
+        print(f"Failed to send {'OUT' if out else 'IN'} attendance data for {username}. "
+              f"Status Code: {response.status_code}, Response: {response.text}")
+        
+        
 #utility functions:
 def username_present(username):
 	if User.objects.filter(username=username).exists():
@@ -237,6 +261,8 @@ def update_attendance_in_db_in(present):
 		if present[person]==True:
 			a=Time(user=user,username=person,date=today,time=time, out=False)
 			a.save()
+            # Send POST request to the API for IN entry
+			send_post_request_to_api(person, time, out=False)
 
 
 
@@ -248,7 +274,9 @@ def update_attendance_in_db_out(present):
 		if present[person]==True:
 			a=Time(user=user,username=person,date=today,time=time, out=True)
 			a.save()
-
+            # Send POST request to the API for OUT entry
+			send_post_request_to_api(person, time, out=True)
+             
 
 
 
@@ -669,7 +697,7 @@ def mark_your_attendance(request):
         # Update attendance in the database
         update_attendance_in_db_in(present)
         if recognized_person_name:
-            request.session['recognized_person_name'] = list(present.keys())
+            request.session['recognized_person_name'] = recognized_person_name
         return JsonResponse({"status": "success", "probability": highest_prob * 100})
 
     return JsonResponse({"status": "error", "message": "Invalid request."})
@@ -747,7 +775,7 @@ def mark_your_attendance_out(request):
         # Update attendance in the database
         update_attendance_in_db_out(present)
         if recognized_person_name:
-            request.session['recognized_person_name'] = list(present.keys())
+            request.session['recognized_person_name'] = recognized_person_name
         return JsonResponse({"status": "success", "probability": highest_prob * 100})
 
     return JsonResponse({"status": "error", "message": "Invalid request."})
