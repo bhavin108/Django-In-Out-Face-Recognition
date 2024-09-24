@@ -33,7 +33,7 @@
 <body>
 
 <div class="container">
-    <a href="{% url 'dashboard' %}"><h5 class="text-left">Back</h5></a>
+    <a href="{% url 'dashboard' %}" id="back-link" class="text-left disabled" style="pointer-events: none;"><h5>Back</h5></a>
 
     <form method="POST" id="capture-form">
         {% csrf_token %}
@@ -121,10 +121,16 @@
                     if (sampleNum >= maxSamples) {
                         // Stop the video stream
                         video.srcObject.getTracks().forEach(track => track.stop());
-                
+                        
+                        const backLink = document.getElementById('back-link'); // Reference to the Back link
+
                         // Check if all images have been processed before showing the success message
                         Promise.all(uploadPromises).then(() => {
                             statusMessage.textContent = 'Images Captured Successfully';
+                            // Enable the Back link after successful image capture
+                            backLink.classList.remove('disabled');
+                            backLink.style.pointerEvents = 'auto'; // Make it clickable
+
                         });
                 
                         return;
