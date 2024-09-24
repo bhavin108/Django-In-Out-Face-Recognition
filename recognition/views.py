@@ -669,7 +669,7 @@ def mark_your_attendance(request):
         # Update attendance in the database
         update_attendance_in_db_in(present)
         if recognized_person_name:
-            request.session['recognized_person_name'] = recognized_person_name
+            request.session['recognized_person_name'] = list(present.keys())
         return JsonResponse({"status": "success", "probability": highest_prob * 100})
 
     return JsonResponse({"status": "error", "message": "Invalid request."})
@@ -747,7 +747,7 @@ def mark_your_attendance_out(request):
         # Update attendance in the database
         update_attendance_in_db_out(present)
         if recognized_person_name:
-            request.session['recognized_person_name'] = recognized_person_name
+            request.session['recognized_person_name'] = list(present.keys())
         return JsonResponse({"status": "success", "probability": highest_prob * 100})
 
     return JsonResponse({"status": "error", "message": "Invalid request."})
