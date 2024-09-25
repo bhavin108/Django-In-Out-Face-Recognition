@@ -2,6 +2,7 @@ from django.forms import ModelForm
 from django.contrib.auth.models import User
 from django import forms
 from datetime import date,timedelta
+from django.forms.widgets import Select
 #from django.contrib.admin.widgets import AdminDateWidget
 
 class usernameForm(forms.Form):
@@ -23,7 +24,7 @@ class UsernameAndDateForm(forms.Form):
     #Dropdown for selecting users
     username = forms.ModelChoiceField(
         queryset=User.objects.filter(is_superuser=False).exclude(username='admin'),  # Fetch all registered users
-        widget=forms.Select,  # Render as a dropdown
+        widget=Select(attrs={'class': 'selectpicker', 'data-live-search': 'true'}),  # Enable live search
         empty_label="Select User"  # Placeholder text for the dropdown
     )
     date_from=forms.DateField(widget = forms.SelectDateWidget(empty_label=("Choose Year", "Choose Month", "Choose Day")),initial=date.today().replace(day=1))

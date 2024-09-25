@@ -8,7 +8,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" crossorigin="anonymous">
-    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.1/css/bootstrap-select.min.css" crossorigin="anonymous">
+
     <style>
         body {
             background: url('{% static "recognition/img/bg_image.png" %}') no-repeat center center fixed;
@@ -19,14 +20,19 @@
             margin-top: 20px;
             border: 2px solid #fff;
             border-radius: 10px;
+            width: 100%; /* Ensure video takes full width */
+            height: auto; /* Keep aspect ratio */
         }
         .container {
-            background: rgba(0,0,0,0.6);
+            background: rgba(0, 0, 0, 0.6);
             padding: 1em;
             color: #fff;
             border-radius: 10px;
             margin: auto;
-            max-width: 600px;
+            max-width: 90%; /* Make max-width more flexible for mobile */
+        }
+        #status-message {
+            margin-top: 20px; /* Provide spacing for status message */
         }
     </style>
 </head>
@@ -37,42 +43,32 @@
 
     <form method="POST" id="capture-form">
         {% csrf_token %}
-        <form method="POST" id="capture-form">
-            {% csrf_token %}
-            <fieldset class="form-group">
-                <legend class="border-bottom mb-4">Add Photos</legend>
-                <select name="username" class="form-control" id="username-select">
-                    <option value="" disabled selected>Select User</option>
-                    {% for user in form.username.field.choices %}
-                        {% if user.0 %}  <!-- Exclude the empty choice -->
-                            <option value="{{ user.0 }}">{{ user.1 }}</option>
-                        {% endif %}
-                    {% endfor %}
-                </select>
-            </fieldset>
-            
-            <div class="form-group">
-                <button class="btn btn-outline-success" type="button" id="save-employee">Refresh</button>
-                <button class="btn btn-outline-info" type="button" id="start-capture" disabled>Capture Images</button>
+        <fieldset class="form-group">
+            <legend class="border-bottom mb-4">Add Photos</legend>
+            <select name="username" class="selectpicker form-control" id="username-select" data-live-search="true">
+                <option value="" disabled selected>Select User</option>
+                {% for user in form.username.field.choices %}
+                    {% if user.0 %}  <!-- Exclude the empty choice -->
+                        <option value="{{ user.0 }}">{{ user.1 }}</option>
+                    {% endif %}
+                {% endfor %}
+            </select>
+        </fieldset>
+        
+        <div class="form-group row">
+            <div class="col">
+                <button class="btn btn-outline-success btn-block" type="button" id="save-employee">Refresh</button>
             </div>
-        </form>
+            <div class="col">
+                <button class="btn btn-outline-info btn-block" type="button" id="start-capture" disabled>Capture Images</button>
+            </div>
+        </div>
         
-        <script>
-            const usernameSelect = document.getElementById('username-select');
-            const captureButton = document.getElementById('start-capture');
-        
-            usernameSelect.addEventListener('change', function() {
-                if (usernameSelect.value) {
-                    captureButton.disabled = false; // Enable the button if a user is selected
-                } else {
-                    captureButton.disabled = true; // Disable the button if no user is selected
-                }
-            });
-        </script>
         
         <div id="status-message"></div> <!-- To display status messages -->
     </form>
-    <video id="video" width="100%" height="auto" autoplay></video>
+
+    <video id="video" autoplay></video>
     <canvas id="canvas" width="640" height="480" style="display: none;"></canvas>
 </div>
 
@@ -80,8 +76,16 @@
 <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" crossorigin="anonymous"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" crossorigin="anonymous"></script>
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.1/js/bootstrap-select.min.js" crossorigin="anonymous"></script>
 
 <script>
+    const usernameSelect = document.getElementById('username-select');
+    const captureButton = document.getElementById('start-capture');
+    
+    usernameSelect.addEventListener('change', function() {
+        captureButton.disabled = !usernameSelect.value; // Enable/disable button based on selection
+    });
+
     document.getElementById('start-capture').addEventListener('click', function() {
         const video = document.getElementById('video');
         const canvas = document.getElementById('canvas');
@@ -116,29 +120,23 @@
                 let sampleNum = 0;
                 const maxSamples = 200;
                 const captureInterval = 300;
+                let uploadPromises = [];
 
                 function captureFrame() {
                     if (sampleNum >= maxSamples) {
-                        // Stop the video stream
                         video.srcObject.getTracks().forEach(track => track.stop());
-                        
-                        const backLink = document.getElementById('back-link'); // Reference to the Back link
-
-                        // Check if all images have been processed before showing the success message
+                        const backLink = document.getElementById('back-link');
                         Promise.all(uploadPromises).then(() => {
                             statusMessage.textContent = 'Images Captured Successfully';
-                            // Enable the Back link after successful image capture
                             backLink.classList.remove('disabled');
-                            backLink.style.pointerEvents = 'auto'; // Make it clickable
-
+                            backLink.style.pointerEvents = 'auto'; // Make it clickable
                         });
-                
                         return;
                     }
-                
+
                     context.drawImage(video, 0, 0, canvas.width, canvas.height);
                     const imageDataURL = canvas.toDataURL('image/jpeg');
-                
+
                     const uploadPromise = fetch('/create-dataset/', {
                         method: 'POST',
                         headers: {
@@ -158,15 +156,10 @@
                     .catch(error => {
                         console.error('Error sending image data:', error);
                     });
-                
-                    // Push the current upload promise to the array
+
                     uploadPromises.push(uploadPromise);
-                
                     setTimeout(captureFrame, captureInterval);
                 }
-                
-                // Initialize the array to hold upload promises
-                let uploadPromises = [];
                 
                 captureFrame();
             })
@@ -176,7 +169,6 @@
             });
     });
 
-    // AJAX call for saving employees
     document.getElementById('save-employee').addEventListener('click', function() {
         const statusMessage = document.getElementById('status-message');
         statusMessage.textContent = 'Updating employees list...';
@@ -188,10 +180,9 @@
         .then(data => {
             if (data.status === 'success') {
                 statusMessage.textContent = data.message;  // Show success message
-            // Automatically refresh the page after 2 seconds
-            setTimeout(function() {
-                location.reload();
-            }, 2000);            
+                setTimeout(function() {
+                    location.reload();
+                }, 2000);            
             } else {
                 statusMessage.textContent = 'Error: ' + data.message;  // Show error message
             }
