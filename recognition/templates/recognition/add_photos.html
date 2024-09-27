@@ -22,14 +22,17 @@
             border-radius: 10px;
             width: 100%; /* Ensure video takes full width */
             height: auto; /* Keep aspect ratio */
+            transform: scaleX(-1); /* Flip horizontally */
+            -webkit-transform: scaleX(-1); /* Safari */
         }
+        
         .container {
             background: rgba(0, 0, 0, 0.6);
             padding: 1em;
             color: #fff;
             border-radius: 10px;
             margin: auto;
-            max-width: 90%; /* Make max-width more flexible for mobile */
+            max-width: 450px; /* Make max-width more flexible for mobile */
         }
         #status-message {
             margin-top: 20px; /* Provide spacing for status message */
@@ -195,3 +198,4 @@
 
 </body>
 </html>
+
