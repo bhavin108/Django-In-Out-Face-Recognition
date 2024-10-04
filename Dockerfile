@@ -26,10 +26,6 @@ RUN apt-get update && apt-get install -y \
 # Now you can install dlib via pip
 RUN pip install dlib
 
-
-# Install pip dependencies (including dlib)
-RUN pip3 install dlib
-
 ENV PYTHONUNBUFFERED=1
 
 # Set working directory
