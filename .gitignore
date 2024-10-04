@@ -1,4 +1,3 @@
 # Ignore all image files
-*.jpg
 # ignore training_dataset folder
-/face_recognition_data/training_dataset
+
