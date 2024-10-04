@@ -19,8 +19,7 @@ RUN apt-get update && apt-get install -y \
     python3-dev \
     python3-pip
 
-# Install pip dependencies (including dlib)
-RUN pip3 install dlib
+
 
 ENV PYTHONUNBUFFERED=1
 
