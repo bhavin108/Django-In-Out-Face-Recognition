@@ -6,18 +6,26 @@ ENV TZ=Asia/Kolkata
 RUN apt-get update && apt-get install -y tzdata && \
     ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-# Install dependencies
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
     build-essential \
     cmake \
-    g++ \
     libopenblas-dev \
     liblapack-dev \
     libx11-dev \
     libgtk-3-dev \
-    python3 \
+    libboost-python-dev \
+    libboost-thread-dev \
+    libboost-system-dev \
+    libboost-all-dev \
     python3-dev \
-    python3-pip
+    python3-pip \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Now you can install dlib via pip
+RUN pip install dlib
+
 
 # Install pip dependencies (including dlib)
 RUN pip3 install dlib
@@ -38,4 +46,4 @@ COPY . .
 EXPOSE 8000
 
 # Start the Django application
-CMD ["python3", "manage.py", "runserver", "0.0.0.0:8000"]
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
