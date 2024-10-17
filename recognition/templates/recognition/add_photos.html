@@ -20,10 +20,10 @@
             margin-top: 20px;
             border: 2px solid #fff;
             border-radius: 10px;
-            width: 100%; /* Ensure video takes full width */
-            height: auto; /* Keep aspect ratio */
-            transform: scaleX(-1); /* Flip horizontally */
-            -webkit-transform: scaleX(-1); /* Safari */
+            width: 100%;
+            height: auto;
+            transform: scaleX(-1);
+            -webkit-transform: scaleX(-1);
         }
         
         .container {
@@ -32,17 +32,17 @@
             color: #fff;
             border-radius: 10px;
             margin: auto;
-            max-width: 450px; /* Make max-width more flexible for mobile */
+            max-width: 450px;
         }
         #status-message {
-            margin-top: 20px; /* Provide spacing for status message */
+            margin-top: 20px;
         }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <a href="{% url 'dashboard' %}" id="back-link" class="text-left disabled" style="pointer-events: none;"><h5>Back</h5></a>
+    <a href="{% url 'dashboard' %}" id="back-link" class="text-left disabled" none;>Back to Dashboard</a>
 
     <form method="POST" id="capture-form">
         {% csrf_token %}
@@ -51,7 +51,7 @@
             <select name="username" class="selectpicker form-control" id="username-select" data-live-search="true">
                 <option value="" disabled selected>Select User</option>
                 {% for user in form.username.field.choices %}
-                    {% if user.0 %}  <!-- Exclude the empty choice -->
+                    {% if user.0 %}
                         <option value="{{ user.0 }}">{{ user.1 }}</option>
                     {% endif %}
                 {% endfor %}
@@ -60,15 +60,19 @@
         
         <div class="form-group row">
             <div class="col">
-                <button class="btn btn-outline-success btn-block" type="button" id="save-employee">Refresh</button>
+                <button class="btn btn-outline-success btn-block" type="button" id="save-employee">Update data</button>
             </div>
             <div class="col">
                 <button class="btn btn-outline-info btn-block" type="button" id="start-capture" disabled>Capture Images</button>
             </div>
         </div>
         
-        
-        <div id="status-message"></div> <!-- To display status messages -->
+        <!-- Progress Bar -->
+        <div class="progress" id="progress-container" style="display: none;">
+            <div class="progress-bar" role="progressbar" id="progress-bar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+        </div>
+
+        <div id="status-message"></div>
     </form>
 
     <video id="video" autoplay></video>
@@ -86,7 +90,7 @@
     const captureButton = document.getElementById('start-capture');
     
     usernameSelect.addEventListener('change', function() {
-        captureButton.disabled = !usernameSelect.value; // Enable/disable button based on selection
+        captureButton.disabled = !usernameSelect.value;
     });
 
     document.getElementById('start-capture').addEventListener('click', function() {
@@ -94,13 +98,19 @@
         const canvas = document.getElementById('canvas');
         const context = canvas.getContext('2d');
         const statusMessage = document.getElementById('status-message');
+        const progressBar = document.getElementById('progress-bar');
+        const progressContainer = document.getElementById('progress-container');
+        const backLink = document.getElementById('back-link');
         const form = document.getElementById('capture-form');
-        
+
         const usernameSelect = form.querySelector('select[name="username"]');
         const selectedOption = usernameSelect.options[usernameSelect.selectedIndex];
         const username = selectedOption.textContent.trim();
 
         statusMessage.textContent = 'Capturing Images...';
+        backLink.classList.add('disabled');
+        backLink.style.pointerEvents = 'none';
+        progressContainer.style.display = 'block';
 
         const constraints = {
             video: {
@@ -128,11 +138,19 @@
                 function captureFrame() {
                     if (sampleNum >= maxSamples) {
                         video.srcObject.getTracks().forEach(track => track.stop());
-                        const backLink = document.getElementById('back-link');
                         Promise.all(uploadPromises).then(() => {
-                            statusMessage.textContent = 'Images Captured Successfully';
+                            statusMessage.textContent = 'Images Captured Successfully.';
                             backLink.classList.remove('disabled');
-                            backLink.style.pointerEvents = 'auto'; // Make it clickable
+                            backLink.style.pointerEvents = 'auto';
+                            progressBar.style.width = '100%'; // Ensure progress bar completes
+                            
+                            // Disable and hide progress bar after completion
+                            setTimeout(() => {
+                                progressBar.style.width = '0%';
+                                progressBar.setAttribute('aria-valuenow', 0);
+                                progressBar.textContent = ''; // Clear text content
+                                progressContainer.style.display = 'none'; // Hide progress bar container
+                            }, 2000);  // Delay to let user see the success message
                         });
                         return;
                     }
@@ -152,6 +170,16 @@
                     .then(data => {
                         if (data.status === 'success') {
                             sampleNum++;
+                            const progress = Math.min(((sampleNum / maxSamples) * 100).toFixed(2), 100); // Ensure progress doesn't exceed 100%
+                            progressBar.style.width = progress + '%';
+                            progressBar.setAttribute('aria-valuenow', progress);
+                            progressBar.textContent = progress + '%';
+                            
+                            if (progress >= 100) {
+                                statusMessage.textContent = 'Images captured, Wait for a few seconds...';
+                            } else {
+                                statusMessage.textContent = 'Capturing Images...';
+                            }
                         } else {
                             console.error('Error capturing image:', data.error);
                         }
@@ -172,6 +200,7 @@
             });
     });
 
+
     document.getElementById('save-employee').addEventListener('click', function() {
         const statusMessage = document.getElementById('status-message');
         statusMessage.textContent = 'Updating employees list...';
@@ -182,12 +211,12 @@
         .then(response => response.json())
         .then(data => {
             if (data.status === 'success') {
-                statusMessage.textContent = data.message;  // Show success message
+                statusMessage.textContent = data.message;
                 setTimeout(function() {
                     location.reload();
                 }, 2000);            
             } else {
-                statusMessage.textContent = 'Error: ' + data.message;  // Show error message
+                statusMessage.textContent = 'Error: ' + data.message;
             }
         })
         .catch(error => {
@@ -198,4 +227,3 @@
 
 </body>
 </html>
-
