@@ -27,6 +27,7 @@ urlpatterns = [
       path('list-employees/', recog_views.list_employees, name='list_employees'),
       path('save-employees/', recog_views.save_employee_and_update_auth_users, name='save_employees'),
       path('train/', recog_views.train, name='train'),
+      path('training_progress/', recog_views.train, name='training_progress'),
     path('add_photos/', recog_views.add_photos, name='add-photos'),
     path('create-dataset/', recog_views.create_dataset, name='create-dataset'),
     path('process-images/', recog_views.process_images, name='process_images'),

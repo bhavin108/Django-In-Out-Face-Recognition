@@ -250,6 +250,7 @@ def vizualize_Data(embedded, targets):
 
 
 
+
 def update_attendance_in_db_in(present):
 	today=datetime.date.today()
 	time=datetime.datetime.now()
@@ -878,6 +879,10 @@ def train(request):
     messages.success(request, 'Training Complete.')
 
     return render(request, "recognition/train.html")
+
+def training_progress(request):
+    progress = cache.get('training_progress', 0)  # Default progress is 0 if not set
+    return JsonResponse({'progress': progress})
 
 @login_required
 def not_authorised(request):
