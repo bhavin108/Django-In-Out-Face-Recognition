@@ -221,27 +221,45 @@ def predict(face_aligned,svc,threshold=0.75):
 	return (result[0],prob[0][result[0]])
 
 
-def vizualize_Data(embedded, targets,):
+def vizualize_Data(embedded, targets):
+    # Increase the figure size to give more space for the plot
+    plt.figure(figsize=(12, 8))  # Adjust width and height as needed
 
-	X_embedded = TSNE(n_components=2).fit_transform(embedded)
+    # Reduce dimensionality to 2D for visualization
+    X_embedded = TSNE(n_components=2).fit_transform(embedded)
 
-	for i, t in enumerate(set(targets)):
-		idx = targets == t
-		plt.scatter(X_embedded[idx, 0], X_embedded[idx, 1], label=t)
+    # Plotting each class with a unique color and label
+    for i, t in enumerate(set(targets)):
+        idx = targets == t
+        plt.scatter(X_embedded[idx, 0], X_embedded[idx, 1], label=t)
 
-	plt.legend(bbox_to_anchor=(1, 1));
-	rcParams.update({'figure.autolayout': True})
-	plt.tight_layout()
-	plt.savefig('./recognition/static/recognition/img/training_visualisation.png')
-	plt.close()
+    # Adjust the legend placement outside the plot
+    plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+
+    # Update layout to prevent overlap
+    rcParams.update({'figure.autolayout': True})
+    
+    # Ensure tight layout for better spacing
+    plt.tight_layout()
+
+    # Save the figure in a specified location
+    plt.savefig('./recognition/static/recognition/img/training_visualisation.png', bbox_inches='tight')
+
+    # Close the plot to free memory
+    plt.close()
 
 
 
 def update_attendance_in_db_in(present):
 	today=datetime.date.today()
 	time=datetime.datetime.now()
+	print("Present List:",str(present))
 	for person in present:
-		user=User.objects.get(username=person)
+		print("Person Name:", str(person))
+		try:
+			user=User.objects.get(username=person)
+		except:
+			continue
 		try:
 		   qs=Present.objects.get(user=user,date=today)
 		except :
@@ -269,8 +287,13 @@ def update_attendance_in_db_in(present):
 def update_attendance_in_db_out(present):
 	today=datetime.date.today()
 	time=datetime.datetime.now()
+	print("Present List:",str(present))
 	for person in present:
-		user=User.objects.get(username=person)
+		print("Person Name:", str(person))
+		try:
+			user=User.objects.get(username=person)
+		except:
+			continue
 		if present[person]==True:
 			a=Time(user=user,username=person,date=today,time=time, out=True)
 			a.save()
@@ -666,6 +689,8 @@ def mark_your_attendance(request):
             x, y, w, h = face.left(), face.top(), face.right(), face.bottom()
             face_aligned = fa.align(frame, gray_frame, face)
             (pred, prob) = predict(face_aligned, svc)
+            print("predition:", str(pred))
+            print("probability:", str(prob))
             if pred != [-1]:
                 person_name = encoder.inverse_transform(np.ravel([pred]))[0]
                 recognized_person_name = person_name
@@ -743,7 +768,8 @@ def mark_your_attendance_out(request):
             x, y, w, h = face.left(), face.top(), face.right(), face.bottom()
             face_aligned = fa.align(frame, gray_frame, face)
             (pred, prob) = predict(face_aligned, svc)
-
+            print("predition:", str(pred))
+            print("probability:", str(prob))
             if pred != [-1]:
                 person_name = encoder.inverse_transform(np.ravel([pred]))[0]
                 recognized_person_name = person_name

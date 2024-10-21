@@ -3,6 +3,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
@@ -79,7 +80,7 @@
                 <h4 class="icon-name">Add Photos</h4>
             </div>
             <div class="col-md-6 icon-container">
-                <a href="{% url 'train' %}" id="trainButton" onclick="showProcessingMessage()"><img src="{% static 'recognition/img/train.jpeg' %}" class="img-responsive" /></a>
+                <a href="{% url 'train' %}" id="trainButton" onclick="startTraining()"><img src="{% static 'recognition/img/train.jpeg' %}" class="img-responsive" /></a>
                 <h4 class="icon-name">Train</h4>
             </div>
             <div class="col-md-6 icon-container">
@@ -88,8 +89,13 @@
             </div>
         </div>
 
-        <!-- Processing message -->
-        <div id="processingMessage">Processing...</div>
+
+        <!-- Progress Bar -->
+        <div id="progressContainer" style="width: 100%; background-color: #f8f5f5;">
+            <div id="progressBar" style="width: 0%; height: 20px; background-color: #4CAF50;"></div>
+        </div>
+        <p id="progressPercentage">Training Progress: 0%</p>
+
 
         {% if messages %}
             <div class="row">
@@ -107,11 +113,38 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" crossorigin="anonymous"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" crossorigin="anonymous"></script>
 
-    <!-- JavaScript to show Processing message -->
+    <!-- JavaScript to show progress bar -->
     <script>
-        function showProcessingMessage() {
-            document.getElementById('processingMessage').style.display = 'block';
+        function fetchProgress() {
+            $.ajax({
+                url: "{% url 'training_progress' %}",  // URL to the progress view
+                method: 'GET',
+                success: function(data) {
+                    const progress = data.progress;
+                    $('#progressBar').css('width', progress + '%');
+                    $('#progressPercentage').text('Training Progress: ' + progress + '%');
+        
+                    // Continue fetching progress if not yet 100%
+                    if (progress < 100) {
+                        setTimeout(fetchProgress, 1000);  // Fetch every second
+                    }
+                },
+                error: function() {
+                    console.log('Failed to fetch progress');
+                }
+            });
         }
-    </script>
+        
+        function startTraining() {
+            // Start fetching progress after train button is clicked
+            fetchProgress();
+        }
+        
+        document.getElementById("trainButton").addEventListener("click", function() {
+            startTraining();
+        });
+        </script>
+        
+        
 </body>
 </html>
