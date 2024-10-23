@@ -12,8 +12,56 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" crossorigin="anonymous">
 
     <style>
+        header {
+            background-color: rgba(0, 0, 0, 0.8);
+            padding: 20px 20px;
+        }
+        
+        .nav-left h3 {
+                color: #b8860b;
+                margin: 0;
+                font-size: 1.5em;
+                align-items: center;
+                text-align: center;
+        }
+        h3 {
+            color: #b8860b;
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+    
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-right {
+          margin-left: auto; /* Pushes nav-right to the far right */
+        }
+
+        .nav-right ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            align-items: center;
+        }
+
+        .nav-right ul li a {
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+            transition: opacity 0.3s ease;
+        }
+
+        .nav-right ul li a:hover {
+            opacity: 0.7;
+        }
+
         body {
-            background: url('{% static "recognition/img/bg_image.png"%}') no-repeat center center fixed;
+            background: url('{% static "recognition/img/home.jpeg"%}') no-repeat center center fixed;
             background-size: cover;
         }
 
@@ -39,63 +87,92 @@
         }
 
         .container {
-            background: rgba(0,0,0,0.6);
-            margin-top: 0em;
-            margin-bottom: 5em;
-            padding-top: 1em;
-            padding-bottom: 3em;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 20px;
+            margin: 1.5em auto;
             color: #fff;
             border-radius: 10px;
-            box-shadow: 2px 2px 15px 0px rgba(0, 3, 0, 0.7);
+            max-width: 600px;
+            box-shadow: 2px 2px 15px rgba(0, 0, 0, 0.7);
         }
 
-        #processingMessage {
-            display: none;
-            text-align: center;
-            margin-top: 1em;
-            margin-left: 2em;
-            font-size: 1.2em;
-            color: #21cac5;
+        @media (max-width: 768px) {
+            .icon-container img {
+            width: 65px;
+            height: 65px;
+            border-radius: 50%;
+            transition: all 0.3s ease-in-out;
+            }
+
+        .icon-container img:hover {
+            box-shadow: 2px 2px 21px 0px rgba(0, 3, 0, 0.91);
+            border: 2px solid #fff;
+        }
+
+        .icon-name {
+            margin-top: 0.5em;
+        }
+            
+        }
+
+        @media (max-width: 480px) {
+            .icon-container img {
+            width: 65px;
+            height: 65px;
+            border-radius: 50%;
+            transition: all 0.3s ease-in-out;
+        }
+
+        .icon-container img:hover {
+            box-shadow: 2px 2px 21px 0px rgba(0, 3, 0, 0.91);
+            border: 2px solid #fff;
+        }
+
+        .icon-name {
+            margin-top: 0.5em;
+        }
+            
         }
     </style>
 </head>
 <body>
+
+    <header>
+        <nav>
+            <div class="nav-left ">
+                <div class="col-12">
+                    <h3 class="text-center">Welcome, admin.</h3>
+                </div>
+            </div>
+            <div class="nav-right">
+                <ul>
+                    <li><a href="{% url 'logout' %}">Logout</a></li>
+                </ul>
+            </div>
+
+        </nav>
+    </header>
     <div class="container">
-        <div class="row mb-4">
-            <div class="col-12 text-right">
-                <a href="{% url 'logout' %}"><h5><i class="fa fa-user-circle" aria-hidden="true"></i> Logout</h5></a>
-            </div>
-            <div class="col-12">
-                <h2 class="text-center">Welcome, admin.</h2>
-            </div>
-        </div>
+
 
         <div class="row">
             <div class="col-md-6 icon-container">
                 <a href="{% url 'list_employees' %}"><img src="{% static 'recognition/img/register.png' %}" class="img-responsive" /></a>
-                <h4 class="icon-name">View All Employees</h4>
+                <h5 class="icon-name">View All Employees</h5>
             </div>
             <div class="col-md-6 icon-container">
                 <a href="{% url 'add-photos' %}"><img src="{% static 'recognition/img/addphotos.png' %}" class="img-responsive" /></a>
-                <h4 class="icon-name">Add Photos</h4>
+                <h5 class="icon-name">Add Photos</h5>
             </div>
             <div class="col-md-6 icon-container">
                 <a href="{% url 'train' %}" id="trainButton" onclick="startTraining()"><img src="{% static 'recognition/img/train.jpeg' %}" class="img-responsive" /></a>
-                <h4 class="icon-name">Train</h4>
+                <h5 class="icon-name">Train</h5>
             </div>
             <div class="col-md-6 icon-container">
                 <a href="{% url 'view-attendance-home' %}"><img src="{% static 'recognition/img/reports.png' %}" class="img-responsive" /></a>
-                <h4 class="icon-name">View Attendance Reports</h4>
+                <h5 class="icon-name">View Attendance Reports</h5>
             </div>
         </div>
-
-
-        <!-- Progress Bar -->
-        <div id="progressContainer" style="width: 100%; background-color: #f8f5f5;">
-            <div id="progressBar" style="width: 0%; height: 20px; background-color: #4CAF50;"></div>
-        </div>
-        <p id="progressPercentage">Training Progress: 0%</p>
-
 
         {% if messages %}
             <div class="row">
@@ -111,40 +188,6 @@
     <!-- Optional JavaScript -->
     <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" crossorigin="anonymous"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" crossorigin="anonymous"></script>
-
-    <!-- JavaScript to show progress bar -->
-    <script>
-        function fetchProgress() {
-            $.ajax({
-                url: "{% url 'training_progress' %}",  // URL to the progress view
-                method: 'GET',
-                success: function(data) {
-                    const progress = data.progress;
-                    $('#progressBar').css('width', progress + '%');
-                    $('#progressPercentage').text('Training Progress: ' + progress + '%');
-        
-                    // Continue fetching progress if not yet 100%
-                    if (progress < 100) {
-                        setTimeout(fetchProgress, 1000);  // Fetch every second
-                    }
-                },
-                error: function() {
-                    console.log('Failed to fetch progress');
-                }
-            });
-        }
-        
-        function startTraining() {
-            // Start fetching progress after train button is clicked
-            fetchProgress();
-        }
-        
-        document.getElementById("trainButton").addEventListener("click", function() {
-            startTraining();
-        });
-        </script>
-        
-        
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" crossorigin="anonymous"></script>     
 </body>
 </html>

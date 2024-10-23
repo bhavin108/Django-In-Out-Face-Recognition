@@ -4,143 +4,236 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="{% static 'recognition/img/favicon.png' %}">
     <title>Attendance System</title>
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <style>
-        .container {
-            margin-top: 50px;
+        /* Global Styles */
+        body {
+            background: url('{% static "recognition/img/home.jpeg"%}') no-repeat center center fixed;
+            background-size: cover;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+            margin: 0;
+            padding: 0;
         }
+    
+        header {
+            background-color: rgba(0, 0, 0, 0.8);
+            padding: 10px 20px;
+        }
+    
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+    
+        .nav-left h3 {
+            color: #b8860b;
+            margin: 0;
+            font-size: 1.5em;
+            align-items: center;
+            text-align: center;
+        }
+    
+        .nav-right ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            align-items: center;
+        }
+    
+        .nav-right ul li a {
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+            transition: opacity 0.3s ease;
+        }
+    
+        .nav-right ul li a:hover {
+            opacity: 0.7;
+        }
+    
+        /* Container Styling */
+        .container {
+            background: rgba(0, 0, 0, 0.6);
+            padding: 20px;
+            margin: 1.5em auto;
+            color: #fff;
+            border-radius: 10px;
+            max-width: 600px;
+            box-shadow: 2px 2px 15px rgba(0, 0, 0, 0.7);
+            text-align: center;
+        }
+
         h2 {
             color: #b8860b;
             font-size: 28px;
             font-weight: bold;
-            text-align: left;
-            margin-top: 20px;
-            margin-left: 5px; /* Adjust margin to align with icons */
-            line-height: 1.2;
+            margin-bottom: 20px;
         }
+    
+        /* Button Styles */
         .actions {
             display: flex;
-            flex-direction: row; /* Keep the buttons in a vertical layout */
-            justify-content: flex-start;
-            align-items: flex-start; /* Align items to the left */
-            gap: 20px; /* Adjust gap between items */
+            justify-content: space-around;
             margin-top: 20px;
-            margin-left: 20px; /* Adjust left margin to match the header */
         }
-        .action-item, .login-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 5px;
-        }
-        .action-item button, .login-item img {
-            background-size: cover;
+    
+        .btn {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
             border: none;
-            width: 65px;
-            height: 65px;
-            cursor: pointer;
-            background-color: transparent;
-            background-position: center;
-            background-repeat: no-repeat;
-            transition: opacity 0.3s ease;
-        }
-        #check-in-btn {
-            background-image: url("{% static 'recognition/img/enter.png' %}");
-        }
-        #check-out-btn {
-            background-image: url("{% static 'recognition/img/exit.png' %}");
-        }
-        .action-item button:hover, .login-item img:hover {
-            opacity: 0.8;
-        }
-        .btn-text {
-            color: black;
-            font-size: 14px;
+            font-size: 30px;
             font-weight: bold;
-            text-align: center;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
         }
+    
+        .btn-in {
+            background-color: #28a745;
+            background-image: linear-gradient(to bottom, #32CD32, #27ae60);
+        }
+    
+        .btn-out {
+            background-color: #dc3545;
+            background-image: linear-gradient(to bottom, #f84632, #c0392b);
+        }
+    
+        .btn:hover {
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.4);
+            transform: translateY(-10px);
+        }
+    
+        .btn:active {
+            transform: translateY(5px);
+            box-shadow: 0 3px 5px rgba(0, 0, 0, 0.2);
+        }
+    
+        /* Camera Stream */
         #video-stream {
             display: none;
-            text-align: left;
-            margin-top: 10px;
-            margin-left: 5px; /* Align video stream with the icons */
+            text-align: center;
+            margin-top: 20px;
         }
+    
         #camera-feed {
             max-width: 100%;
-            max-height:360px ;
+            height: auto;
             border: 2px solid #000;
             border-radius: 10px;
-            display: block;
-            margin: 0 auto; /* Center the camera feed */
         }
-        .message {
-            color: red;
-            font-size: 16px;
-            font-weight: bold;
-            text-align: left;
-            margin-top: 20px;
-            margin-left: 70px; /* Align message with the icons */
-        }
+    
         #prediction {
             font-size: 18px;
             font-weight: bold;
             color: green;
             margin-top: 10px;
-            margin-left: 70px; /* Align prediction text with the icons */
+        }
+    
+        .message {
+            color: red;
+            font-size: 16px;
+            font-weight: bold;
+            text-align: center;
+            margin-top: 20px;
+            display: none;
+        }
+    
+        /* Responsive Styling */
+        @media (max-width: 768px) {
+            h2 {
+                font-size: 24px;
+            }
+    
+            .btn {
+                width: 150px;
+                height: 150px;
+            }
+
+            .btn:hover {
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.4);
+            transform: translateY(-10px);
+        }
+        }
+    
+        @media (max-width: 480px) {
+            .btn {
+                width: 100px;
+                height: 100px;
+                font-size: 30px;
+            }
+    
+            .btn-text {
+                font-size: 25px;
+            }
+
+            .btn:hover {
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.4);
+            transform: translateY(-10px);
+        }
         }
     </style>
+    
 </head>
 <body>
     <header>
         <nav>
-            <ul>
-                {% if user.is_authenticated %}
-                    <li><a href="{% url 'logout' %}">Logout</a></li>
-                {% endif %}
-            </ul>
+            <div class="nav-left">
+                <h3 style="color: #b8860b;">YAMUNA ATTENDANCE SYSTEM</h3>
+				
+            </div>
+            <div class="nav-right">
+                <ul>
+                    {% if user.is_authenticated %}
+                        <li><a href="{% url 'logout' %}">Logout</a></li>
+                    {% else %}
+                        <li><a href="{% url 'login' %}">Login</a></li>
+                    {% endif %}
+                </ul>
+            </div>
         </nav>
     </header>
 
     <main>
-        <h2 style="color: #b8860b; font-size: 20px; font-weight: bold; text-align: left; margin-top: 20px; line-height: 1.2;">
-       Yamuna Jewellers Attendance System
-        </h2>
+        <div class="container">
 
-        {% if messages %}
-            <div>
-                {% for message in messages %}
-                    <p class="{{ message.tags }}">{{ message }}</p>
-                {% endfor %}
-            </div>
-        {% endif %}
+            {% if messages %}
+                <div>
+                    {% for message in messages %}
+                        <p class="{{ message.tags }}">{{ message }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
 
-        <div class="actions">
-            <div class="action-item">
-                <button id="check-in-btn" onclick="startAttendance('{% url 'mark_your_attendance' %}', '{% url 'attendance_in_redirect' %}')"></button>
-                <div class="btn-text">Check In</div>
+            <div class="actions">
+                <div class="action-item">
+                    <button class="btn btn-in" onclick="startAttendance('{% url 'mark_your_attendance' %}', '{% url 'attendance_in_redirect' %}')">In</button>
+                    
+                </div>
+                <div class="action-item">
+                    <button class="btn btn-out" onclick="startAttendance('{% url 'mark_your_attendance_out' %}', '{% url 'attendance_out_redirect' %}')">Out</button>
+                    
+                </div>
             </div>
-            <div class="action-item">
-                <button id="check-out-btn" onclick="startAttendance('{% url 'mark_your_attendance_out' %}', '{% url 'attendance_out_redirect' %}')"></button>
-                <div class="btn-text">Check Out</div>
+
+            <div id="video-stream">
+                <h3>Marking Attendance...</h3>
+                <video id="camera-feed" autoplay></video>
+                <div id="prediction">Prediction Probability: 0%</div>
             </div>
-            <div class="login-item">
-                <a href="{% url 'login' %}">
-                    <img src="{% static 'recognition/img/login.png' %}" class="img-responsive" />
-                </a>
-                <div class="btn-text">Login</div>
-            </div>
+
+            <!-- Error message display -->
+            <div id="error-message" class="message" style="display: none;"></div>
         </div>
-
-        <div id="video-stream">
-            <h2 style="color: #b8860b; font-size: 20px; font-weight: bold; text-align: left; margin-top: 20px; line-height: 1.2;" >Marking Attendance...</h2>
-            <video id="camera-feed" autoplay></video>
-            <div id="prediction">Prediction Probability: 0%</div>
-        </div>
-
-        <!-- Error message display -->
-        <div id="error-message" class="message" style="display: none;"></div>
     </main>
 
     <script type="text/javascript">
@@ -205,10 +298,10 @@
         function stopVideoStream() {
             if (videoStream) {
                 const tracks = videoStream.getTracks();
-                tracks.forEach(track => track.stop()); // Stop all tracks (camera stream)
+                tracks.forEach(track => track.stop());
                 videoStream = null;
             }
-            document.getElementById('video-stream').style.display = 'none'; // Hide the video stream
+            document.getElementById('video-stream').style.display = 'none';
         }
     </script>
 </body>
