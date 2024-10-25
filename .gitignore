@@ -1,4 +1,7 @@
 # Ignore all image files
 
-# ignore training_dataset folder
-/face_recognition_data/training_dataset/*
+# ignore training_dataset folder, classes.npy, shape_predictor_5_faces_landmarks.dat, svc.sav 
+/face_recognition_data/*
+
+#ignore db.sqlite3
+db.sqlite3
