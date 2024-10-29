@@ -164,14 +164,16 @@
                 <a href="{% url 'add-photos' %}"><img src="{% static 'recognition/img/addphotos.png' %}" class="img-responsive" /></a>
                 <h5 class="icon-name">Add Photos</h5>
             </div>
-            <div class="col-md-6 icon-container">
+            <div class="col-md-12 icon-container">
                 <a href="{% url 'train' %}" id="trainButton" onclick="startTraining()"><img src="{% static 'recognition/img/train.jpeg' %}" class="img-responsive" /></a>
                 <h5 class="icon-name">Train</h5>
             </div>
+            <!--
             <div class="col-md-6 icon-container">
                 <a href="{% url 'view-attendance-home' %}"><img src="{% static 'recognition/img/reports.png' %}" class="img-responsive" /></a>
                 <h5 class="icon-name">View Attendance Reports</h5>
             </div>
+            -->
         </div>
 
         {% if messages %}

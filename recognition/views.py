@@ -201,7 +201,7 @@ def add_photos(request):
     return render(request, 'recognition/add_photos.html', {'form': form})
 
 
-def predict(face_aligned,svc,threshold=0.75):
+def predict(face_aligned,svc,threshold=0.50):
 	face_encodings=np.zeros((1,128))
 	try:
 		x_face_locations=face_recognition.face_locations(face_aligned)

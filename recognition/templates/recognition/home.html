@@ -83,8 +83,8 @@
         }
     
         .btn {
-            width: 150px;
-            height: 150px;
+            width: 200px;
+            height: 200px;
             border-radius: 50%;
             border: none;
             font-size: 30px;
@@ -167,8 +167,8 @@
     
         @media (max-width: 480px) {
             .btn {
-                width: 100px;
-                height: 100px;
+                width: 150px;
+                height: 150px;
                 font-size: 30px;
             }
     
@@ -216,13 +216,15 @@
 
             <div class="actions">
                 <div class="action-item">
-                    <button class="btn btn-in" onclick="startAttendance('{% url 'mark_your_attendance' %}', '{% url 'attendance_in_redirect' %}')">In</button>
+                    <button class="btn btn-in" onclick="startAttendance('{% url 'mark_your_attendance' %}', '{% url 'attendance_in_redirect' %}')">In/Out</button>
                     
                 </div>
+                <!--
                 <div class="action-item">
                     <button class="btn btn-out" onclick="startAttendance('{% url 'mark_your_attendance_out' %}', '{% url 'attendance_out_redirect' %}')">Out</button>
                     
                 </div>
+                -->
             </div>
 
             <div id="video-stream">
