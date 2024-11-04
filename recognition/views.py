@@ -109,10 +109,12 @@ def send_post_request_to_api(username,time, out):
         'Authorization': f'{token}',
     
     }
-    if out:
-        url = 'https://daily-inout.in/api/add-OutEntry'
-    else:
-        url = 'https://daily-inout.in/api/add-InEntry'
+
+    url = 'https://daily-inout.in/api/add-attendance'
+    #if out:
+    #    url = 'https://daily-inout.in/api/add-OutEntry'
+    #else:
+    #    url = 'https://daily-inout.in/api/add-InEntry'
     
     payload = {
         "user": username,
@@ -814,7 +816,7 @@ def home(request):
 # Views to handle redirects after attendance is marked
 def attendance_in_redirect(request):
     recognized_person_name = request.session.get('recognized_person_name', request.user.username)
-    messages.success(request, f"User: {recognized_person_name}  Checked-IN successfully. ")
+    messages.success(request, f"Hi,{recognized_person_name} Your Attendance Marked Successfully.")
     return HttpResponseRedirect(reverse('home'))
 
 def attendance_out_redirect(request):

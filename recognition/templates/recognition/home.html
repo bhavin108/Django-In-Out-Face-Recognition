@@ -204,14 +204,24 @@
     </header>
 
     <main>
-        <div class="container">
+                <div class="container">
 
-            {% if messages %}
-                <div>
-                    {% for message in messages %}
-                        <p class="{{ message.tags }}">{{ message }}</p>
+                    {% if messages %}
+                        <div id="success-message-container">
+                            {% for message in messages %}
+                                <p id="success-message" class="{{ message.tags }}">{{ message }}</p>
                     {% endfor %}
                 </div>
+                <script>
+                    // Hide the message after 2 seconds
+                    setTimeout(function() {
+                        const successMessage = document.getElementById('success-message');
+                        if (successMessage) {
+                            successMessage.style.display = 'none';
+                        }
+                    }, 5000);  // 5000 milliseconds = 2 seconds
+                </script>
+                
             {% endif %}
 
             <div class="actions">
