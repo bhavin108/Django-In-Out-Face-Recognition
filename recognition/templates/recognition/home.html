@@ -83,8 +83,8 @@
         }
     
         .btn {
-            width: 200px;
-            height: 200px;
+            width: 150px;
+            height: 150px;
             border-radius: 50%;
             border: none;
             font-size: 30px;
@@ -127,7 +127,7 @@
     
         #camera-feed {
             max-width: 100%;
-            height: auto;
+            height: 250px;
             border: 2px solid #000;
             border-radius: 10px;
         }
@@ -155,8 +155,8 @@
             }
     
             .btn {
-                width: 150px;
-                height: 150px;
+                width: 120px;
+                height: 120px;
             }
 
             .btn:hover {
@@ -167,8 +167,8 @@
     
         @media (max-width: 480px) {
             .btn {
-                width: 150px;
-                height: 150px;
+                width: 120px;
+                height: 120px;
                 font-size: 30px;
             }
     
@@ -212,14 +212,24 @@
                                 <p id="success-message" class="{{ message.tags }}">{{ message }}</p>
                     {% endfor %}
                 </div>
+
+                <!-- Audio Element -->
+                <audio id="success-audio" preload="auto">
+                    <source src="{% static 'recognition/audio/thank-you.mp3' %}" type="audio/mpeg">
+                    Your browser does not support the audio element.
+                </audio>
+
                 <script>
-                    // Hide the message after 2 seconds
-                    setTimeout(function() {
-                        const successMessage = document.getElementById('success-message');
-                        if (successMessage) {
+                    // Play audio and hide the message after a delay
+                    const successMessage = document.getElementById('success-message');
+                    const successAudio = document.getElementById('success-audio');
+
+                    if (successMessage) {
+                        successAudio.play(); // Play the success audio
+                        setTimeout(() => {
                             successMessage.style.display = 'none';
-                        }
-                    }, 5000);  // 5000 milliseconds = 2 seconds
+                        }, 5000); // Hide message after 5 seconds
+                    }
                 </script>
                 
             {% endif %}
